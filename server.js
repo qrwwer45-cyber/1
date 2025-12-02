@@ -118,6 +118,35 @@ bot.onText(/\/generate/, (msg) => {
         }
     });
 });
+// Команда для проверки статуса ключа
+bot.onText(/\/status/, (msg) => {
+    const chatId = msg.chat.id;
+    
+    const userData = userKeys.get(chatId);
+    if (!userData) {
+        bot.sendMessage(chatId, '❌ У вас нет активного ключа.\n\nДля получения ключа нажмите "Получить сигнал" в главном меню.');
+        return;
+    }
+    
+    const timeRemaining = getTimeRemaining(userData.expiry);
+    const activatedDate = userData.activated.toLocaleDateString('ru-RU');
+    
+    let statusMessage = `🔑 *Статус вашего ключа*\n\n`;
+    statusMessage += `📅 *Активирован:* ${activatedDate}\n`;
+    statusMessage += `⏰ *Осталось времени:* ${timeRemaining}\n`;
+    statusMessage += `🔖 *Ключ:* \`${userData.key}\`\n\n`;
+    
+    if (timeRemaining === 'истек') {
+        statusMessage += `⚠️ *Ваш ключ истек!*\n\nДля продления доступа свяжитесь с поддержкой: @tatarseget`;
+    } else if (timeRemaining === 'навсегда') {
+        statusMessage += `✅ *Бессрочный доступ*`;
+    } else {
+        statusMessage += `✅ *Ключ активен*`;
+    }
+    
+    bot.sendMessage(chatId, statusMessage, { parse_mode: 'Markdown' });
+});
+
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     
@@ -395,4 +424,25 @@ bot.on('callback_query', (callbackQuery) => {
                     { text: 'Навсегда', callback_data: 'buy_999999' }
                 ],
                 [
-   
+                    { text: 'У меня уже есть ключ', callback_data: 'have_key' }
+                ],
+                [
+                    { text: '← Назад', callback_data: 'back_to_main' }
+                ]
+            ];
+            
+            const message = bot.sendMessage(chatId, 'Выберите период доступа:', {
+                reply_markup: {
+                    inline_keyboard: buyButtons
+                }
+            });
+            
+            waitingForKey.set(chatId, { stage: 'buy', messageId: message.message_id });
+        }
+        bot.answerCallbackQuery(callbackQuery.id);
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
