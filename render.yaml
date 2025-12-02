@@ -6,7 +6,5 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     envVars:
-      - key: 8404772967:AAEvnuh0tTcHj08tkmimybNgCjxHvZiam9c
-        sync: false
       - key: PORT
         value: 10000
